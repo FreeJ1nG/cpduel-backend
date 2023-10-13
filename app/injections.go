@@ -2,15 +2,16 @@ package app
 
 import (
 	"context"
+	"encoding/json"
+	"net/http"
 
 	"github.com/FreeJ1nG/cpduel-backend/app/problem"
 	"github.com/FreeJ1nG/cpduel-backend/app/webscrapper"
 	"github.com/FreeJ1nG/cpduel-backend/util"
-	"github.com/gofiber/fiber/v2"
 )
 
 func (s *Server) InjectDependencies(ctx context.Context) {
-	s.router.Use(util.LoggerMiddleware())
+	s.router.Use(util.LoggerMiddleware)
 
 	// Repositories
 	problemRepo := problem.NewRepository(s.db)
@@ -22,12 +23,11 @@ func (s *Server) InjectDependencies(ctx context.Context) {
 	// Controllers
 	problemHandler := problem.NewHandler(problemService)
 
-	s.router.Get("/", func(c *fiber.Ctx) error {
-		return c.JSON(fiber.Map{
-			"message": "ok",
-		})
-	})
+	s.router.HandleFunc("/", func(w http.ResponseWriter, r *http.Request) {
+		w.WriteHeader(http.StatusOK)
+		json.NewEncoder(w).Encode(map[string]string{"message": "ok"})
+	}).Methods("GET")
 
-	problemRouter := s.router.Group("/problems")
-	problemRouter.Get("/:id", problemHandler.GetProblem)
+	problemRouter := s.router.PathPrefix("/problems").Subrouter()
+	problemRouter.HandleFunc("/{id}", problemHandler.GetProblem).Methods("GET")
 }

@@ -2,9 +2,9 @@ package problem
 
 import (
 	"context"
+	"net/http"
 
 	"github.com/FreeJ1nG/cpduel-backend/app/webscrapper"
-	"github.com/gofiber/fiber/v2"
 )
 
 type service struct {
@@ -26,15 +26,15 @@ func NewService(ctx context.Context, problemRepo Repository, webscrapperService 
 }
 
 func (s *service) GetProblem(problemId string) (res GetProblemResponse, status int, err error) {
-	status = fiber.StatusOK
+	status = http.StatusOK
 	problem, err := s.problemRepo.GetProblemById(problemId)
 	if err != nil {
-		status = fiber.StatusNotFound
+		status = http.StatusNotFound
 		return
 	}
 	languages, err := s.problemRepo.GetLanguagesOfProblemById(problemId)
 	if err != nil {
-		status = fiber.StatusInternalServerError
+		status = http.StatusInternalServerError
 		return
 	}
 	res = GetProblemResponse{

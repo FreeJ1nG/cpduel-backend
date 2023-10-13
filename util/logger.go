@@ -2,26 +2,35 @@ package util
 
 import (
 	"fmt"
+	"net/http"
 	"time"
-
-	"github.com/gofiber/fiber/v2"
 )
 
-func LoggerMiddleware() func(c *fiber.Ctx) error {
-	return func(c *fiber.Ctx) error {
+type statusRecorder struct {
+	http.ResponseWriter
+	status int
+}
+
+func (rec *statusRecorder) WriteHeader(statusCode int) {
+	rec.status = statusCode
+	rec.ResponseWriter.WriteHeader(statusCode)
+}
+
+func LoggerMiddleware(next http.Handler) http.Handler {
+	return http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
+		recoder := &statusRecorder{w, http.StatusOK}
 		now := time.Now()
 		defer func() {
 			fmt.Printf(
 				"method=%s, url=%s, host=%s, path=%s, duration=%s, status=%d\n",
-				c.Method(),
-				c.Request().URI().String(),
-				c.Hostname(),
-				c.Path(),
+				r.Method,
+				r.RequestURI,
+				r.Host,
+				r.URL.Path,
 				time.Since(now).String(),
-				c.Response().StatusCode(),
+				recoder.status,
 			)
 		}()
-
-		return c.Next()
-	}
+		next.ServeHTTP(recoder, r)
+	})
 }

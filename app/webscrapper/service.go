@@ -3,13 +3,13 @@ package webscrapper
 import (
 	"context"
 	"fmt"
+	"net/http"
 	"strconv"
 	"strings"
 	"time"
 
 	"github.com/FreeJ1nG/cpduel-backend/app/models"
 	"github.com/chromedp/chromedp"
-	"github.com/gofiber/fiber/v2"
 )
 
 type service struct {
@@ -75,19 +75,19 @@ func (s *service) loginToBotAccount(ctx context.Context) (err error) {
 }
 
 func (s *service) ScrapLanguagesOfProblem(ctx context.Context, problemId string) (languages []models.Language, status int, err error) {
-	status = fiber.StatusOK
+	status = http.StatusOK
 	problemNumber, problemCode := parseProblemId(problemId)
 
 	url := fmt.Sprintf("%s/contest/%s/problem/%s", CODEFORCES_STRING, problemNumber, problemCode)
 	if err = chromedp.Run(ctx, chromedp.Navigate(url)); err != nil {
 		err = fmt.Errorf("unable to open problem: %s", err.Error())
-		status = fiber.StatusBadRequest
+		status = http.StatusBadRequest
 		return
 	}
 
 	err = s.loginToBotAccount(ctx)
 	if err != nil {
-		status = fiber.StatusInternalServerError
+		status = http.StatusInternalServerError
 		return
 	}
 
@@ -104,7 +104,7 @@ func (s *service) ScrapLanguagesOfProblem(ctx context.Context, problemId string)
 		),
 	); err != nil {
 		err = fmt.Errorf("unable to scrap language: %s", err.Error())
-		status = fiber.StatusInternalServerError
+		status = http.StatusInternalServerError
 		return
 	}
 
@@ -112,7 +112,7 @@ func (s *service) ScrapLanguagesOfProblem(ctx context.Context, problemId string)
 }
 
 func (s *service) ScrapProblem(ctx context.Context, problemId string) (problem models.Problem, status int, err error) {
-	status = fiber.StatusOK
+	status = http.StatusOK
 	problemNumber, problemCode := parseProblemId(problemId)
 
 	url := fmt.Sprintf("%s/contest/%s/problem/%s", CODEFORCES_STRING, problemNumber, problemCode)
@@ -130,7 +130,7 @@ func (s *service) ScrapProblem(ctx context.Context, problemId string) (problem m
 		chromedp.Navigate(url),
 	); err != nil {
 		err = fmt.Errorf("unable to open problem: %s", err.Error())
-		status = fiber.StatusBadRequest
+		status = http.StatusBadRequest
 		return
 	}
 
@@ -141,13 +141,13 @@ func (s *service) ScrapProblem(ctx context.Context, problemId string) (problem m
 		chromedp.Location(&currentUrl),
 	); err != nil {
 		err = fmt.Errorf("unable to get page location: %s", err.Error())
-		status = fiber.StatusInternalServerError
+		status = http.StatusInternalServerError
 		return
 	}
 
 	if currentUrl != url {
 		err = fmt.Errorf("problem page doesn't exist")
-		status = fiber.StatusBadRequest
+		status = http.StatusBadRequest
 		return
 	}
 
@@ -165,7 +165,7 @@ func (s *service) ScrapProblem(ctx context.Context, problemId string) (problem m
 		),
 	); err != nil {
 		err = fmt.Errorf("unable to scrap problem: %s", err.Error())
-		status = fiber.StatusInternalServerError
+		status = http.StatusInternalServerError
 		return
 	}
 
@@ -178,7 +178,7 @@ func (s *service) ScrapProblem(ctx context.Context, problemId string) (problem m
 	parsedDifficulty, err := strconv.ParseInt(difficulty, 10, 32)
 	if err != nil {
 		err = fmt.Errorf("unable to parse difficulty: %s", err.Error())
-		status = fiber.StatusInternalServerError
+		status = http.StatusInternalServerError
 		return
 	}
 

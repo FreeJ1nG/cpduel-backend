@@ -1,7 +1,11 @@
 package problem
 
 import (
-	"github.com/gofiber/fiber/v2"
+	"encoding/json"
+	"fmt"
+	"net/http"
+
+	"github.com/gorilla/mux"
 )
 
 type handler struct {
@@ -9,6 +13,7 @@ type handler struct {
 }
 
 type Handler interface {
+	GetProblem(w http.ResponseWriter, r *http.Request)
 }
 
 func NewHandler(problemService Service) *handler {
@@ -17,15 +22,19 @@ func NewHandler(problemService Service) *handler {
 	}
 }
 
-func (h *handler) GetProblem(c *fiber.Ctx) error {
-	id := c.Params("id")
+func (h *handler) GetProblem(w http.ResponseWriter, r *http.Request) {
+	vars := mux.Vars(r)
+	id := vars["id"]
 
 	res, status, err := h.problemService.GetProblem(id)
 	if err != nil {
-		return c.Status(status).JSON(fiber.Map{
-			"message": err.Error(),
-		})
+		http.Error(w, err.Error(), status)
+		return
 	}
 
-	return c.Status(status).JSON(res)
+	w.WriteHeader(status)
+	err = json.NewEncoder(w).Encode(res)
+	if err != nil {
+		fmt.Printf("unable to encode problem: %s\n", err.Error())
+	}
 }
