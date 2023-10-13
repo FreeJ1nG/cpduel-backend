@@ -12,7 +12,7 @@ func LoggerMiddleware() func(c *fiber.Ctx) error {
 		now := time.Now()
 		defer func() {
 			fmt.Printf(
-				"method=%s, url=%s, host=%s, path=%s, duration=%s, status=%d",
+				"method=%s, url=%s, host=%s, path=%s, duration=%s, status=%d\n",
 				c.Method(),
 				c.Request().URI().String(),
 				c.Hostname(),

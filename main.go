@@ -3,26 +3,12 @@ package main
 import (
 	"context"
 	"log"
-	"time"
 
 	"github.com/FreeJ1nG/cpduel-backend/app"
 	"github.com/FreeJ1nG/cpduel-backend/db"
 	"github.com/FreeJ1nG/cpduel-backend/util"
 	"github.com/chromedp/chromedp"
 )
-
-func login(ctx context.Context) {
-	url := "https://codeforces.com/enter"
-	if err := chromedp.Run(
-		ctx,
-		chromedp.Navigate(url),
-		chromedp.SendKeys("input[name=handleOrEmail]", "cleopatracpduel@gmail.com"),
-		chromedp.SendKeys("input[name=password]", "penyuiscute"),
-		chromedp.Submit("input[type=submit]"),
-	); err != nil {
-		log.Fatal(err)
-	}
-}
 
 func main() {
 	config, err := util.SetConfig()
@@ -31,9 +17,16 @@ func main() {
 		return
 	}
 
+	var headlessFlag func(*chromedp.ExecAllocator)
+	if config.Env == "local" {
+		headlessFlag = chromedp.Flag("headless", false)
+	} else {
+		headlessFlag = chromedp.Flag("headless", true)
+	}
+
 	opts := append(
 		chromedp.DefaultExecAllocatorOptions[:],
-		chromedp.Flag("headless", config.Headless),
+		headlessFlag,
 	)
 
 	ctx := context.Background()
@@ -41,20 +34,14 @@ func main() {
 	ctx, cancel := chromedp.NewExecAllocator(ctx, opts...)
 	defer cancel()
 
-	ctx, cancel = chromedp.NewContext(ctx)
-	defer cancel()
-
-	ctx, cancel = context.WithTimeout(ctx, 5*time.Second)
-	defer cancel()
-
-	mainDB := db.CreatePool(ctx, config.DBDsn)
-	db.TestConnection(ctx, mainDB)
+	mainDB := db.CreatePool(config.DBDsn)
+	db.TestConnection(mainDB)
 	defer func() {
 		mainDB.Close()
 	}()
 
 	s := app.MakeServer(config, mainDB)
 
-	s.InjectDependencies()
+	s.InjectDependencies(ctx)
 	s.RunServer()
 }

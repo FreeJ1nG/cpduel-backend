@@ -1,0 +1,2 @@
+DROP TABLE IF EXISTS LanguageOfProblem;
+DROP TABLE IF EXISTS Language;

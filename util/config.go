@@ -19,6 +19,7 @@ type Config struct {
 	DBName string `mapstructure:"DB_NAME"`
 	DBPort string `mapstructure:"DB_PORT"`
 
+	DBUrl string `mapstructure:"DB_URL"`
 	DBDsn string
 }
 
