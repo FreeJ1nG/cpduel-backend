@@ -4,20 +4,18 @@ import (
 	"context"
 	"net/http"
 
+	"github.com/FreeJ1nG/cpduel-backend/app/dto"
+	"github.com/FreeJ1nG/cpduel-backend/app/interfaces"
 	"github.com/FreeJ1nG/cpduel-backend/app/webscrapper"
 )
 
 type service struct {
 	ctx                context.Context
-	problemRepo        Repository
+	problemRepo        interfaces.ProblemRepository
 	webscrapperService webscrapper.Service
 }
 
-type Service interface {
-	GetProblem(problemId string) (res GetProblemResponse, status int, err error)
-}
-
-func NewService(ctx context.Context, problemRepo Repository, webscrapperService webscrapper.Service) *service {
+func NewService(ctx context.Context, problemRepo interfaces.ProblemRepository, webscrapperService webscrapper.Service) *service {
 	return &service{
 		ctx:                ctx,
 		problemRepo:        problemRepo,
@@ -25,7 +23,7 @@ func NewService(ctx context.Context, problemRepo Repository, webscrapperService 
 	}
 }
 
-func (s *service) GetProblem(problemId string) (res GetProblemResponse, status int, err error) {
+func (s *service) GetProblem(problemId string) (res dto.GetProblemResponse, status int, err error) {
 	status = http.StatusOK
 	problem, err := s.problemRepo.GetProblemById(problemId)
 	if err != nil {
@@ -37,7 +35,7 @@ func (s *service) GetProblem(problemId string) (res GetProblemResponse, status i
 		status = http.StatusInternalServerError
 		return
 	}
-	res = GetProblemResponse{
+	res = dto.GetProblemResponse{
 		Problem:   problem,
 		Languages: languages,
 	}

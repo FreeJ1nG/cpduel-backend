@@ -1,28 +1,26 @@
 package problem
 
 import (
-	"encoding/json"
-	"fmt"
 	"net/http"
 
+	"github.com/FreeJ1nG/cpduel-backend/app/interfaces"
+	"github.com/FreeJ1nG/cpduel-backend/util"
 	"github.com/gorilla/mux"
 )
 
 type handler struct {
-	problemService Service
+	problemService interfaces.ProblemService
 }
 
-type Handler interface {
-	GetProblem(w http.ResponseWriter, r *http.Request)
-}
-
-func NewHandler(problemService Service) *handler {
+func NewHandler(problemService interfaces.ProblemService) *handler {
 	return &handler{
 		problemService: problemService,
 	}
 }
 
 func (h *handler) GetProblem(w http.ResponseWriter, r *http.Request) {
+	w.Header().Set("Content-Type", "application/json")
+
 	vars := mux.Vars(r)
 	id := vars["id"]
 
@@ -32,9 +30,9 @@ func (h *handler) GetProblem(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
-	w.WriteHeader(status)
-	err = json.NewEncoder(w).Encode(res)
+	err = util.EncodeResponse(w, res, status)
 	if err != nil {
-		fmt.Printf("unable to encode problem: %s\n", err.Error())
+		http.Error(w, err.Error(), http.StatusInternalServerError)
+		return
 	}
 }

@@ -10,6 +10,7 @@ import (
 	"strings"
 	"time"
 
+	"github.com/FreeJ1nG/cpduel-backend/app/interfaces"
 	"github.com/FreeJ1nG/cpduel-backend/app/models"
 	"github.com/FreeJ1nG/cpduel-backend/app/problem"
 	"github.com/FreeJ1nG/cpduel-backend/app/webscrapper"
@@ -18,11 +19,11 @@ import (
 	"github.com/chromedp/chromedp"
 )
 
-func startScrap(ctx context.Context, problemId string, webscrapperService webscrapper.Service, problemRepo problem.Repository) (err error) {
+func startScrap(ctx context.Context, problemId string, webscrapperService webscrapper.Service, problemRepo interfaces.ProblemRepository) (err error) {
 	ctx, cancel := chromedp.NewContext(ctx)
 	defer cancel()
 
-	ctx, cancel = context.WithTimeout(ctx, 10*time.Second)
+	ctx, cancel = context.WithTimeout(ctx, 15*time.Second)
 	defer cancel()
 
 	problem, err := problemRepo.GetProblemById(problemId)

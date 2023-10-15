@@ -1,4 +1,4 @@
-package problem
+package dto
 
 import "github.com/FreeJ1nG/cpduel-backend/app/models"
 
