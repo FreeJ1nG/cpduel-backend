@@ -9,16 +9,12 @@ import (
 	"time"
 
 	"github.com/FreeJ1nG/cpduel-backend/app/models"
+	"github.com/FreeJ1nG/cpduel-backend/util"
 	"github.com/chromedp/chromedp"
 )
 
 type service struct {
 	ctx context.Context
-}
-
-type Service interface {
-	ScrapProblem(ctx context.Context, problemId string) (problem models.Problem, status int, err error)
-	ScrapLanguagesOfProblem(ctx context.Context, problemId string) (languages []models.Language, status int, err error)
 }
 
 func NewService(ctx context.Context) *service {
@@ -28,12 +24,6 @@ func NewService(ctx context.Context) *service {
 }
 
 var CODEFORCES_STRING string = "https://codeforces.com"
-
-func parseProblemId(problemId string) (problemNumber string, problemCode string) {
-	problemNumber = problemId[:len(problemId)-1]
-	problemCode = string(problemId[len(problemId)-1])
-	return
-}
 
 func (s *service) loginToBotAccount(ctx context.Context) (err error) {
 	if err = chromedp.Run(
@@ -76,7 +66,7 @@ func (s *service) loginToBotAccount(ctx context.Context) (err error) {
 
 func (s *service) ScrapLanguagesOfProblem(ctx context.Context, problemId string) (languages []models.Language, status int, err error) {
 	status = http.StatusOK
-	problemNumber, problemCode := parseProblemId(problemId)
+	problemNumber, problemCode := util.ParseProblemId(problemId)
 
 	url := fmt.Sprintf("%s/contest/%s/problem/%s", CODEFORCES_STRING, problemNumber, problemCode)
 	if err = chromedp.Run(ctx, chromedp.Navigate(url)); err != nil {
@@ -113,7 +103,7 @@ func (s *service) ScrapLanguagesOfProblem(ctx context.Context, problemId string)
 
 func (s *service) ScrapProblem(ctx context.Context, problemId string) (problem models.Problem, status int, err error) {
 	status = http.StatusOK
-	problemNumber, problemCode := parseProblemId(problemId)
+	problemNumber, problemCode := util.ParseProblemId(problemId)
 
 	url := fmt.Sprintf("%s/contest/%s/problem/%s", CODEFORCES_STRING, problemNumber, problemCode)
 
@@ -194,3 +184,5 @@ func (s *service) ScrapProblem(ctx context.Context, problemId string) (problem m
 	}
 	return
 }
+
+func (s *service) SubmitCodeWithProblemId(problemId string, sourceCode string, language string) {}

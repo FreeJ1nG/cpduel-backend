@@ -6,16 +6,15 @@ import (
 
 	"github.com/FreeJ1nG/cpduel-backend/app/dto"
 	"github.com/FreeJ1nG/cpduel-backend/app/interfaces"
-	"github.com/FreeJ1nG/cpduel-backend/app/webscrapper"
 )
 
 type service struct {
 	ctx                context.Context
 	problemRepo        interfaces.ProblemRepository
-	webscrapperService webscrapper.Service
+	webscrapperService interfaces.WebscrapperService
 }
 
-func NewService(ctx context.Context, problemRepo interfaces.ProblemRepository, webscrapperService webscrapper.Service) *service {
+func NewService(ctx context.Context, problemRepo interfaces.ProblemRepository, webscrapperService interfaces.WebscrapperService) *service {
 	return &service{
 		ctx:                ctx,
 		problemRepo:        problemRepo,

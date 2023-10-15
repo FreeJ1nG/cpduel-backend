@@ -24,3 +24,9 @@ func EncodeResponse[T interface{}](w http.ResponseWriter, res T, status int) (er
 	}
 	return
 }
+
+func ParseProblemId(problemId string) (problemNumber string, problemCode string) {
+	problemNumber = problemId[:len(problemId)-1]
+	problemCode = string(problemId[len(problemId)-1])
+	return
+}

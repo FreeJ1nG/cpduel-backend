@@ -19,7 +19,7 @@ import (
 	"github.com/chromedp/chromedp"
 )
 
-func startScrap(ctx context.Context, problemId string, webscrapperService webscrapper.Service, problemRepo interfaces.ProblemRepository) (err error) {
+func startScrap(ctx context.Context, problemId string, webscrapperService interfaces.WebscrapperService, problemRepo interfaces.ProblemRepository) (err error) {
 	ctx, cancel := chromedp.NewContext(ctx)
 	defer cancel()
 

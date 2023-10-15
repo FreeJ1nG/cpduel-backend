@@ -6,8 +6,10 @@ import (
 	"net/http"
 
 	"github.com/FreeJ1nG/cpduel-backend/app/auth"
+	"github.com/FreeJ1nG/cpduel-backend/app/pool"
 	"github.com/FreeJ1nG/cpduel-backend/app/problem"
 	"github.com/FreeJ1nG/cpduel-backend/app/webscrapper"
+	"github.com/FreeJ1nG/cpduel-backend/app/ws"
 	"github.com/FreeJ1nG/cpduel-backend/util"
 )
 
@@ -25,9 +27,13 @@ func (s *Server) InjectDependencies(ctx context.Context) {
 	webscrapperService := webscrapper.NewService(ctx)
 	problemService := problem.NewService(ctx, problemRepo, webscrapperService)
 
+	serviceContainer := pool.NewServiceContainer(authService, problemService, webscrapperService)
+	pool := pool.NewPool(serviceContainer)
+	websocketService := ws.NewService(pool)
+
 	// Controllers
 	problemHandler := problem.NewHandler(problemService)
-	// websocketHandler := websocket.NewHandler()
+	websocketHandler := ws.NewHandler(websocketService)
 	authHandler := auth.NewHandler(authService)
 
 	s.router.HandleFunc("/", func(w http.ResponseWriter, r *http.Request) {
@@ -36,7 +42,7 @@ func (s *Server) InjectDependencies(ctx context.Context) {
 		json.NewEncoder(w).Encode(map[string]string{"message": "ok"})
 	}).Methods("GET")
 
-	// s.router.HandleFunc("/websocket")
+	s.router.HandleFunc("/websocket", websocketHandler.WebsocketConnectionHandler)
 
 	authRouter := s.router.PathPrefix("/auth").Subrouter()
 	authRouter.HandleFunc("/login", authHandler.AuthenticateUser).Methods("POST")
