@@ -2,6 +2,7 @@ package problem
 
 import (
 	"context"
+	"fmt"
 	"net/http"
 
 	"github.com/FreeJ1nG/cpduel-backend/app/dto"
@@ -26,11 +27,13 @@ func (s *service) GetProblem(problemId string) (res dto.GetProblemResponse, stat
 	status = http.StatusOK
 	problem, err := s.problemRepo.GetProblemById(problemId)
 	if err != nil {
+		err = fmt.Errorf("unable to get problem from database: %s", err.Error())
 		status = http.StatusNotFound
 		return
 	}
 	languages, err := s.problemRepo.GetLanguagesOfProblemById(problemId)
 	if err != nil {
+		err = fmt.Errorf("unable to get language from database: %s", err.Error())
 		status = http.StatusInternalServerError
 		return
 	}

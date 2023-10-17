@@ -1,13 +1,12 @@
 package models
 
-import "time"
-
 type Submission struct {
-	Id          int       `json:"id"`
-	Owner       string    `json:"owner"`
-	Content     string    `json:"content"`
-	Language    string    `json:"language"`
-	SubmittedAt time.Time `json:"submitted_at"`
-	SubmittedBy string    `json:"submitted_by"`
-	Verdict     string    `json:"verdict"`
+	Id             int    `json:"id"`
+	ProblemId      string `json:"problem_id"`
+	Owner          string `json:"owner"`
+	Content        string `json:"content"`
+	LanguageId     string `json:"language_id"`
+	SubmittedAt    int64  `json:"submitted_at"`
+	Verdict        string `json:"verdict"`
+	OJSubmissionId string `json:"oj_submission_id"`
 }

@@ -8,6 +8,7 @@ import (
 	"github.com/FreeJ1nG/cpduel-backend/app/auth"
 	"github.com/FreeJ1nG/cpduel-backend/app/pool"
 	"github.com/FreeJ1nG/cpduel-backend/app/problem"
+	"github.com/FreeJ1nG/cpduel-backend/app/submission"
 	"github.com/FreeJ1nG/cpduel-backend/app/webscrapper"
 	"github.com/FreeJ1nG/cpduel-backend/app/ws"
 	"github.com/FreeJ1nG/cpduel-backend/util"
@@ -16,20 +17,28 @@ import (
 func (s *Server) InjectDependencies(ctx context.Context) {
 	s.router.Use(util.LoggerMiddleware)
 
+	// Utils
+	authUtil := auth.NewUtil()
+	websocketUtil := ws.NewUtil()
+
 	// Repositories
 	authRepo := auth.NewRepository(s.db)
 	problemRepo := problem.NewRepository(s.db)
+	submissionRepo := submission.NewRepository(s.db)
 
-	routeProtector := util.NewRouteProtector(authRepo)
+	routeProtector := util.NewRouteProtector(authUtil, authRepo)
 
 	// Services
-	authService := auth.NewService(authRepo)
+	authService := auth.NewService(authUtil, authRepo)
 	webscrapperService := webscrapper.NewService(ctx)
 	problemService := problem.NewService(ctx, problemRepo, webscrapperService)
+	submissionService := submission.NewService(submissionRepo, webscrapperService)
 
-	serviceContainer := pool.NewServiceContainer(authService, problemService, webscrapperService)
+	serviceContainer := pool.NewServiceContainer(authUtil, websocketUtil, authService, problemService, submissionService, webscrapperService)
 	pool := pool.NewPool(serviceContainer)
-	websocketService := ws.NewService(pool)
+	go pool.Start()
+
+	websocketService := ws.NewService(ctx, pool)
 
 	// Controllers
 	problemHandler := problem.NewHandler(problemService)
@@ -51,5 +60,4 @@ func (s *Server) InjectDependencies(ctx context.Context) {
 
 	problemRouter := s.router.PathPrefix("/problems").Subrouter()
 	problemRouter.HandleFunc("/{id}", problemHandler.GetProblem).Methods("GET")
-
 }

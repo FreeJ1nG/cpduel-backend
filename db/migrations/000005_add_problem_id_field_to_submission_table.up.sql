@@ -1,0 +1,2 @@
+ALTER TABLE Submission
+ADD COLUMN problem_id VARCHAR(50) NOT NULL;

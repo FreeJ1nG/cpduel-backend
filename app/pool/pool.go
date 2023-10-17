@@ -1,6 +1,10 @@
 package pool
 
-import "github.com/FreeJ1nG/cpduel-backend/app/interfaces"
+import (
+	"fmt"
+
+	"github.com/FreeJ1nG/cpduel-backend/app/interfaces"
+)
 
 type pool struct {
 	algo     chan interfaces.PoolAlgo
@@ -23,7 +27,7 @@ func (p *pool) Start() (err error) {
 		algo := <-p.algo
 		err = algo.Run(p.services)
 		if err != nil {
-			return
+			fmt.Printf("pool error: %s\n", err.Error())
 		}
 	}
 }

@@ -2,7 +2,6 @@ package problem
 
 import (
 	"context"
-	"fmt"
 
 	"github.com/FreeJ1nG/cpduel-backend/app/models"
 	"github.com/georgysavva/scany/v2/pgxscan"
@@ -49,9 +48,7 @@ func (r *repository) CreateProblem(
 		difficulty,
 		body,
 	)
-
 	if err != nil {
-		err = fmt.Errorf("failed to create problem: %s", err.Error())
 		return
 	}
 
@@ -70,6 +67,7 @@ func (r *repository) CreateProblem(
 
 func (r *repository) CreateLanguages(languages []models.Language) (err error) {
 	ctx := context.Background()
+
 	rows := make([][]interface{}, 0)
 	for _, language := range languages {
 		langInterface := []interface{}{language.Id, language.Value}
@@ -89,6 +87,7 @@ func (r *repository) CreateLanguages(languages []models.Language) (err error) {
 
 func (r *repository) CreateProblemLanguages(languages []models.Language, problemId string) (err error) {
 	ctx := context.Background()
+
 	rows := make([][]interface{}, 0)
 	for _, language := range languages {
 		problemLanguageInterface := []interface{}{problemId, language.Id}
@@ -108,6 +107,7 @@ func (r *repository) CreateProblemLanguages(languages []models.Language, problem
 
 func (r *repository) GetProblemById(problemId string) (problem models.Problem, err error) {
 	ctx := context.Background()
+
 	err = pgxscan.Get(
 		ctx,
 		r.mainDB,
@@ -116,7 +116,6 @@ func (r *repository) GetProblemById(problemId string) (problem models.Problem, e
 		problemId,
 	)
 	if err != nil {
-		err = fmt.Errorf("failed to fetch problem from the database: %s", err.Error())
 		return
 	}
 	return
@@ -156,6 +155,7 @@ func (r *repository) GetLanguageWithIds(languageIds []string) (languages []model
 
 func (r *repository) GetLanguagesOfProblemById(problemId string) (languages []models.Language, err error) {
 	ctx := context.Background()
+
 	rows, err := r.mainDB.Query(
 		ctx,
 		`SELECT L.* FROM LANGUAGE L
@@ -188,6 +188,7 @@ func (r *repository) GetLanguagesOfProblemById(problemId string) (languages []mo
 
 func (r *repository) DeleteProblemById(problemId string) (err error) {
 	ctx := context.Background()
+
 	_, err = r.mainDB.Exec(
 		ctx,
 		`DELETE FROM Problem WHERE id = $1;`,

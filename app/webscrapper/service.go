@@ -58,6 +58,7 @@ func (s *service) loginToBotAccount(ctx context.Context) (err error) {
 		ctx,
 		chromedp.WaitVisible("input[type=submit]"),
 		chromedp.Submit("input[type=submit]"),
+		chromedp.Sleep(1500*time.Millisecond),
 	); err != nil {
 		err = fmt.Errorf("unable to login: %s", err.Error())
 	}
@@ -185,4 +186,110 @@ func (s *service) ScrapProblem(ctx context.Context, problemId string) (problem m
 	return
 }
 
-func (s *service) SubmitCodeWithProblemId(problemId string, sourceCode string, language string) {}
+func (s *service) SubmitCode(
+	ctx context.Context,
+	submission *models.Submission,
+	problemId string,
+	sourceCode string,
+	languageId string,
+) (err error) {
+	problemNumber, problemCode := util.ParseProblemId(problemId)
+
+	url := fmt.Sprintf("%s/contest/%s", CODEFORCES_STRING, problemNumber)
+	if err = chromedp.Run(
+		ctx,
+		chromedp.Navigate(url),
+	); err != nil {
+		err = fmt.Errorf("contest page does not exist: %s", err.Error())
+		return
+	}
+
+	err = s.loginToBotAccount(ctx)
+	if err != nil {
+		return
+	}
+
+	url = fmt.Sprintf("%s/contest/%s/submit", CODEFORCES_STRING, problemNumber)
+	if err = chromedp.Run(
+		ctx,
+		chromedp.Navigate(url),
+	); err != nil {
+		err = fmt.Errorf("unable to navigate to submission page: %s", err.Error())
+		return
+	}
+
+	if err = chromedp.Run(
+		ctx,
+		chromedp.WaitVisible(`select[name="submittedProblemIndex"]`, chromedp.ByQuery),
+		chromedp.Sleep(100*time.Millisecond),
+		chromedp.SetValue(`select[name="submittedProblemIndex"]`, problemCode, chromedp.BySearch),
+		chromedp.Sleep(100*time.Millisecond),
+		chromedp.SetValue(`select[name="programTypeId"]`, languageId, chromedp.BySearch),
+		chromedp.Sleep(100*time.Millisecond),
+		chromedp.SetValue(`#sourceCodeTextarea`, sourceCode, chromedp.ByID),
+		chromedp.Sleep(100*time.Millisecond),
+		chromedp.Submit(`#singlePageSubmitButton`, chromedp.ByID),
+	); err != nil {
+		err = fmt.Errorf("unable to submit code: %s", err.Error())
+		return
+	}
+
+	var duplicate bool = false
+
+	chromedp.Run(
+		ctx,
+		chromedp.Sleep(300*time.Millisecond),
+		chromedp.Text(`.for__source`, new(string), chromedp.ByQuery, chromedp.AtLeast(0)),
+		chromedp.ActionFunc(func(ctx context.Context) error {
+			duplicate = true
+			return nil
+		}),
+	)
+
+	if duplicate {
+		err = fmt.Errorf("unable to submit code: duplicate submission")
+		return
+	}
+
+	url = fmt.Sprintf("%s/contest/%s/my", CODEFORCES_STRING, problemNumber)
+
+	if err = chromedp.Run(
+		ctx,
+		chromedp.Sleep(150*time.Millisecond),
+		chromedp.Text(`tbody > tr:nth-child(2) > td.id-cell`, &submission.OJSubmissionId, chromedp.ByQuery),
+	); err != nil {
+		err = fmt.Errorf("unable to locate submission id: %s", err.Error())
+		return
+	}
+
+	for {
+		if err = chromedp.Run(
+			ctx,
+			chromedp.Sleep(150*time.Millisecond),
+			chromedp.Navigate(url),
+			chromedp.Text(
+				fmt.Sprintf(`tbody > tr[data-submission-id="%s"] > td.status-verdict-cell`, submission.OJSubmissionId),
+				&submission.Verdict,
+				chromedp.ByQuery,
+			),
+		); err != nil {
+			err = fmt.Errorf("unable to get submission verdict: %s", err.Error())
+			return
+		}
+
+		var waiting string
+		var exists bool
+
+		if err = chromedp.Run(
+			ctx,
+			chromedp.AttributeValue(fmt.Sprintf(`tbody > tr[data-submission-id="%s"] > td.status-verdict-cell`, submission.OJSubmissionId), "waiting", &waiting, &exists, chromedp.ByQuery),
+		); err != nil {
+			err = fmt.Errorf("unable to locate waiting status: %s", err.Error())
+			return
+		}
+
+		if exists && waiting == "false" {
+			return
+		}
+	}
+}

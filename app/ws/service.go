@@ -1,6 +1,7 @@
 package ws
 
 import (
+	"context"
 	"encoding/json"
 	"fmt"
 
@@ -11,11 +12,13 @@ import (
 )
 
 type service struct {
+	ctx  context.Context
 	pool interfaces.Pool
 }
 
-func NewService(pool interfaces.Pool) *service {
+func NewService(ctx context.Context, pool interfaces.Pool) *service {
 	return &service{
+		ctx:  ctx,
 		pool: pool,
 	}
 }
@@ -27,6 +30,7 @@ func (s *service) ReadMessageFromClient(client *models.WebsocketClient) (err err
 			err = fmt.Errorf("unable to read message from client: %s", err.Error())
 			return err
 		}
+		fmt.Println("Websocket message:\n", string(p))
 
 		var clientMessage dto.ClientWebsocketMessage
 		if err = json.Unmarshal(p, &clientMessage); err != nil {
@@ -34,15 +38,26 @@ func (s *service) ReadMessageFromClient(client *models.WebsocketClient) (err err
 			return err
 		}
 
-		payload, err := clientMessage.ParsePayload()
-		if err != nil {
-			err = fmt.Errorf("unable to parse payload: %s", err.Error())
-			return err
+		payload := clientMessage.Payload
+
+		var algo interfaces.PoolAlgo
+		if clientMessage.Type == dto.HandshakeMessageType {
+			algo = strategies.NewHandshakeStrategy(
+				client,
+				dto.HandshakePayload{JwtToken: payload.JwtToken},
+			)
+		} else if clientMessage.Type == dto.SubmitMessageType {
+			algo = strategies.NewSubmitProblemStrategy(
+				s.ctx,
+				client,
+				dto.SubmitCodePayload{
+					ProblemId:  payload.ProblemId,
+					LanguageId: payload.LanguageId,
+					SourceCode: payload.SourceCode,
+				},
+			)
 		}
 
-		if clientMessage.Type == "submit" {
-			algo := strategies.NewSubmitProblemStrategy(client, payload.(dto.SubmitCodePayload))
-			s.pool.SetAlgo(algo)
-		}
+		s.pool.SetAlgo(algo)
 	}
 }

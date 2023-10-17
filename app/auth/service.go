@@ -6,14 +6,17 @@ import (
 
 	"github.com/FreeJ1nG/cpduel-backend/app/dto"
 	"github.com/FreeJ1nG/cpduel-backend/app/interfaces"
+	"github.com/FreeJ1nG/cpduel-backend/app/models"
 )
 
 type service struct {
+	authUtil interfaces.AuthUtil
 	authRepo interfaces.AuthRepository
 }
 
-func NewService(authRepo interfaces.AuthRepository) *service {
+func NewService(authUtil interfaces.AuthUtil, authRepo interfaces.AuthRepository) *service {
 	return &service{
+		authUtil: authUtil,
 		authRepo: authRepo,
 	}
 }
@@ -21,7 +24,7 @@ func NewService(authRepo interfaces.AuthRepository) *service {
 func (s *service) RegisterUser(username string, fullName string, password string) (res dto.RegisterResponse, status int, err error) {
 	status = http.StatusOK
 
-	passwordHash, err := HashPassword(password)
+	passwordHash, err := s.authUtil.HashPassword(password)
 	if err != nil {
 		err = fmt.Errorf("failed to hash password: %s", err.Error())
 		status = http.StatusInternalServerError
@@ -35,7 +38,7 @@ func (s *service) RegisterUser(username string, fullName string, password string
 		return
 	}
 
-	signedToken, err := GenerateToken(user)
+	signedToken, err := s.authUtil.GenerateToken(user)
 	if err != nil {
 		err = fmt.Errorf("unable to generate token: %s", err.Error())
 		status = http.StatusInternalServerError
@@ -64,7 +67,7 @@ func (s *service) AuthenticateUser(username string, password string) (res dto.Lo
 		return
 	}
 
-	signedToken, err := GenerateToken(user)
+	signedToken, err := s.authUtil.GenerateToken(user)
 	if err != nil {
 		err = fmt.Errorf("unable to generate token: %s", err.Error())
 		status = http.StatusInternalServerError
@@ -73,6 +76,17 @@ func (s *service) AuthenticateUser(username string, password string) (res dto.Lo
 
 	res = dto.LoginResponse{
 		Token: signedToken,
+	}
+	return
+}
+
+func (s *service) GetUserByUsername(username string) (user models.User, status int, err error) {
+	status = http.StatusOK
+	user, err = s.authRepo.GetUserByUsername(username)
+	if err != nil {
+		err = fmt.Errorf("unable to find user: %s", err.Error())
+		status = http.StatusNotFound
+		return
 	}
 	return
 }

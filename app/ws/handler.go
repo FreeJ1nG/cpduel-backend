@@ -1,11 +1,11 @@
 package ws
 
 import (
+	"fmt"
 	"net/http"
 
 	"github.com/FreeJ1nG/cpduel-backend/app/interfaces"
 	"github.com/FreeJ1nG/cpduel-backend/app/models"
-	"github.com/FreeJ1nG/cpduel-backend/util"
 )
 
 type handler struct {
@@ -21,12 +21,16 @@ func NewHandler(websocketService interfaces.WebsocketService) *handler {
 func (h *handler) WebsocketConnectionHandler(w http.ResponseWriter, r *http.Request) {
 	conn, err := upgradeConnection(w, r)
 	if err != nil {
-		http.Error(w, err.Error(), http.StatusInternalServerError)
+		fmt.Println(err.Error())
 		return
 	}
+	defer conn.Close()
 
-	user := r.Context().Value(util.UserContextKey).(models.User)
-	client := models.NewWebsocketClient(conn, &user)
+	client := models.NewWebsocketClient(conn, nil)
 
-	h.websocketService.ReadMessageFromClient(client)
+	err = h.websocketService.ReadMessageFromClient(client)
+	if err != nil {
+		fmt.Println(err.Error())
+		return
+	}
 }
