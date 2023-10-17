@@ -24,16 +24,31 @@ func NewSubmitProblemStrategy(ctx context.Context, client *models.WebsocketClien
 	}
 }
 
+func (s *submitProblemStrategy) sendSubmissionStateToClient(websocketUtil interfaces.WebsocketUtil, submission models.Submission) error {
+	return websocketUtil.SendJSONToClient(s.client, dto.WebsocketMessageResponse{
+		Type: dto.SubmissionStateMessageType,
+		Data: &dto.ResponseData{
+			Submission: submission,
+		},
+	})
+}
+
 func (s *submitProblemStrategy) Run(services interfaces.ServiceContainer) (err error) {
 	submissionService := services.GetSubmissionService()
 	webscrapperService := services.GetWebscrapperService()
 	websocketUtil := services.GetWebsocketUtil()
+
 	submission, err := submissionService.MakeSubmission(
 		s.client.User.Username,
 		s.payload.ProblemId,
 		s.payload.SourceCode,
 		s.payload.LanguageId,
 	)
+	if err != nil {
+		return
+	}
+
+	err = s.sendSubmissionStateToClient(websocketUtil, submission)
 	if err != nil {
 		return
 	}
@@ -50,23 +65,23 @@ func (s *submitProblemStrategy) Run(services interfaces.ServiceContainer) (err e
 		completed = true
 	}()
 
-	previousVerdict := submission.Verdict
 	for {
-		if previousVerdict != submission.Verdict {
-			websocketUtil.SendJSONToClient(s.client, dto.WebsocketMessageResponse{
-				Type: dto.SubmissionStateMessageType,
-				Data: &dto.ResponseData{
-					Submission: submission,
-				},
-			})
+		err = s.sendSubmissionStateToClient(websocketUtil, submission)
+		if err != nil {
+			return
 		}
-		previousVerdict = submission.Verdict
-		time.Sleep(500 * time.Millisecond)
+
+		time.Sleep(time.Second)
 		if err != nil {
 			websocketUtil.SendErrorToClient(s.client, err.Error())
 			return
 		}
+
 		if completed {
+			err = s.sendSubmissionStateToClient(websocketUtil, submission)
+			if err != nil {
+				return
+			}
 			return
 		}
 	}
