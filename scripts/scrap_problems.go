@@ -1,4 +1,4 @@
-package main
+package scripts
 
 import (
 	"bufio"
@@ -12,10 +12,6 @@ import (
 
 	"github.com/FreeJ1nG/cpduel-backend/app/interfaces"
 	"github.com/FreeJ1nG/cpduel-backend/app/models"
-	"github.com/FreeJ1nG/cpduel-backend/app/problem"
-	"github.com/FreeJ1nG/cpduel-backend/app/webscrapper"
-	"github.com/FreeJ1nG/cpduel-backend/db"
-	"github.com/FreeJ1nG/cpduel-backend/util"
 	"github.com/chromedp/chromedp"
 )
 
@@ -108,31 +104,11 @@ func startScrap(ctx context.Context, problemId string, webscrapperService interf
 	return
 }
 
-func main() {
-	config, err := util.SetConfig()
-	if err != nil {
-		log.Fatal("failed to load config: ", err.Error())
-		return
-	}
-
-	opts := append(
-		chromedp.DefaultExecAllocatorOptions[:],
-		chromedp.Flag("headless", true),
-	)
-
-	ctx := context.Background()
-
-	ctx, cancel := chromedp.NewExecAllocator(ctx, opts...)
-	defer cancel()
-
-	mainDB := db.CreatePool(config.DBDsn)
-	db.TestConnection(mainDB)
-	defer mainDB.Close()
-
-	problemRepo := problem.NewRepository(mainDB)
-
-	webscrapperService := webscrapper.NewService(ctx)
-
+func ScrapProblem(
+	ctx context.Context,
+	webscrapperService interfaces.WebscrapperService,
+	problemRepo interfaces.ProblemRepository,
+) {
 	inputReader := bufio.NewReader(os.Stdin)
 
 	fmt.Println("Enter the lower bound of problem number")

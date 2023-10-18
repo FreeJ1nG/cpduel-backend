@@ -126,7 +126,7 @@ func (r *repository) GetLanguageWithIds(languageIds []string) (languages []model
 
 	rows, err := r.mainDB.Query(
 		ctx,
-		`SELECT * FROM Language WHERE id = ANY($1::VARCHAR(40)[]);`,
+		`SELECT id, value, extension FROM Language WHERE id = ANY($1::VARCHAR(40)[]);`,
 		languageIds,
 	)
 	if err != nil {
@@ -138,7 +138,7 @@ func (r *repository) GetLanguageWithIds(languageIds []string) (languages []model
 
 	for rows.Next() {
 		var language models.Language
-		err = rows.Scan(&language.Id, &language.Value)
+		err = rows.Scan(&language.Id, &language.Value, &language.Extension)
 		if err != nil {
 			return
 		}
@@ -158,9 +158,10 @@ func (r *repository) GetLanguagesOfProblemById(problemId string) (languages []mo
 
 	rows, err := r.mainDB.Query(
 		ctx,
-		`SELECT L.* FROM LANGUAGE L
+		`SELECT L.id, L.value, L.extension FROM LANGUAGE L
 		INNER JOIN LanguageOfProblem LP ON L.id = LP.language_id
-		WHERE LP.problem_id = $1`,
+		WHERE LP.problem_id = $1
+		AND L.allow_use = true;`,
 		problemId,
 	)
 	if err != nil {
@@ -172,7 +173,7 @@ func (r *repository) GetLanguagesOfProblemById(problemId string) (languages []mo
 
 	for rows.Next() {
 		var language models.Language
-		err = rows.Scan(&language.Id, &language.Value)
+		err = rows.Scan(&language.Id, &language.Value, &language.Extension)
 		if err != nil {
 			return
 		}

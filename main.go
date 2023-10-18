@@ -18,10 +18,10 @@ func main() {
 	}
 
 	var headlessFlag func(*chromedp.ExecAllocator)
-	if config.Env == "local" {
-		headlessFlag = chromedp.Flag("headless", false)
-	} else {
+	if config.Headless || config.Env != "local" {
 		headlessFlag = chromedp.Flag("headless", true)
+	} else {
+		headlessFlag = chromedp.Flag("headless", false)
 	}
 
 	opts := append(
