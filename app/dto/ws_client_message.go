@@ -1,13 +1,13 @@
 package dto
 
 type SubmitCodePayload struct {
-	LanguageId string `json:"language_id"`
-	ProblemId  string `json:"problem_id"`
-	SourceCode string `json:"source_code"`
+	LanguageId string `json:"languageId"`
+	ProblemId  string `json:"problemId"`
+	SourceCode string `json:"sourceCode"`
 }
 
 type HandshakePayload struct {
-	JwtToken string `json:"jwt_token"`
+	JwtToken string `json:"jwtToken"`
 }
 
 type PayloadData struct {

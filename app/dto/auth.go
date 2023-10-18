@@ -7,7 +7,7 @@ type LoginRequest struct {
 
 type RegisterRequest struct {
 	Username string `json:"username"`
-	FullName string `json:"full_name"`
+	FullName string `json:"fullName"`
 	Password string `json:"password"`
 }
 
@@ -21,5 +21,5 @@ type RegisterResponse struct {
 
 type GetCurrentUserResponse struct {
 	Username string `json:"username"`
-	FullName string `json:"full_name"`
+	FullName string `json:"fullName"`
 }

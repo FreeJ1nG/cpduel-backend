@@ -9,8 +9,8 @@ import (
 )
 
 type Config struct {
-	AllowUse  bool   `json:"allow_use"`
-	Extension string `json:"extension"`
+	AllowUse  bool
+	Extension string
 }
 
 var languageConfig = map[string]string{
