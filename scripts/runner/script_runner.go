@@ -61,9 +61,9 @@ func main() {
 	scriptName, _ := inputReader.ReadString('\n')
 	scriptName = strings.TrimSuffix(scriptName, "\n")
 
-	if scriptName == "scrap_problems" {
+	if scriptName == ScrapProblem {
 		scripts.ScrapProblem(ctx, webscrapperService, problemRepo)
-	} else if scriptName == "set_language_config" {
+	} else if scriptName == SetLanguageConfig {
 		scripts.SetLanguageConfig(ctx, mainDB)
 	}
 }
