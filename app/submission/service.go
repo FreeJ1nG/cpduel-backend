@@ -2,6 +2,7 @@ package submission
 
 import (
 	"fmt"
+	"net/http"
 
 	"github.com/FreeJ1nG/cpduel-backend/app/interfaces"
 	"github.com/FreeJ1nG/cpduel-backend/app/models"
@@ -34,4 +35,19 @@ func (s *service) MakeSubmission(owner string, problemId string, content string,
 
 func (s *service) GetSubmissionInPool(id int) (submission *models.Submission, found bool) {
 	return s.submissionRepo.GetSubmissionInPool(id)
+}
+
+func (s *service) GetSubmissionsOfUser(username string) (submissions []models.PublicSubmission, status int, err error) {
+	status = http.StatusOK
+	submissions, err = s.submissionRepo.GetSubmissionsOfUser(username)
+	if err != nil {
+		err = fmt.Errorf("unable to get submission of user: %s", err.Error())
+		status = http.StatusInternalServerError
+		return
+	}
+	return
+}
+
+func (s *service) UpdateSubmissionVerdict(submissionId int, verdict string) (err error) {
+	return s.submissionRepo.UpdateSubmissionVerdict(submissionId, verdict)
 }

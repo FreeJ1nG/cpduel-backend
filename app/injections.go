@@ -44,8 +44,9 @@ func (s *Server) InjectDependencies(ctx context.Context) {
 	problemHandler := problem.NewHandler(problemService)
 	websocketHandler := ws.NewHandler(websocketService)
 	authHandler := auth.NewHandler(authService)
+	submissionHandler := submission.NewHandler(submissionService)
 
-	s.router.HandleFunc("/", func(w http.ResponseWriter, r *http.Request) {
+	s.router.HandleFunc("/", func(w http.ResponseWriter, _ *http.Request) {
 		w.Header().Set("Content-Type", "application/json")
 		w.WriteHeader(http.StatusOK)
 		json.NewEncoder(w).Encode(map[string]string{"message": "ok"})
@@ -60,4 +61,7 @@ func (s *Server) InjectDependencies(ctx context.Context) {
 
 	problemRouter := s.router.PathPrefix("/problems").Subrouter()
 	problemRouter.HandleFunc("/{id}", problemHandler.GetProblem).Methods("GET")
+
+	submissionRouter := s.router.PathPrefix("/submission").Subrouter()
+	submissionRouter.HandleFunc("/my", routeProtector.Wrapper(submissionHandler.GetMySubmissions)).Methods("GET")
 }

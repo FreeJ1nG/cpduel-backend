@@ -240,7 +240,7 @@ func (s *service) SubmitCode(
 		ctx,
 		chromedp.Sleep(300*time.Millisecond),
 		chromedp.Text(`.for__source`, new(string), chromedp.ByQuery, chromedp.AtLeast(0)),
-		chromedp.ActionFunc(func(ctx context.Context) error {
+		chromedp.ActionFunc(func(_ context.Context) error {
 			duplicate = true
 			return nil
 		}),

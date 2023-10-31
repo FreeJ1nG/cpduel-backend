@@ -68,3 +68,62 @@ func (r *repository) GetSubmissionInPool(id int) (submission *models.Submission,
 	submission, found = r.submissionPool[id]
 	return
 }
+
+func (r *repository) GetSubmissionsOfUser(username string) (submissions []models.PublicSubmission, err error) {
+	ctx := context.Background()
+
+	rows, err := r.mainDB.Query(
+		ctx,
+		`SELECT Submission.id AS id, owner, content, language.value AS language, problem_id, submitted_at, verdict 
+		FROM Submission
+		INNER JOIN Language
+		ON Language.id = Submission.language_id
+		WHERE owner = $1;`,
+		username,
+	)
+	if err != nil {
+		return
+	}
+	defer rows.Close()
+
+	submissions = make([]models.PublicSubmission, 0)
+	for rows.Next() {
+		var submission models.PublicSubmission
+		err = rows.Scan(
+			&submission.Id,
+			&submission.Owner,
+			&submission.Content,
+			&submission.Language,
+			&submission.ProblemId,
+			&submission.SubmittedAt,
+			&submission.Verdict,
+		)
+		if err != nil {
+			return
+		}
+		submissions = append(submissions, submission)
+	}
+
+	if err = rows.Err(); err != nil {
+		return
+	}
+
+	return
+}
+
+func (r *repository) UpdateSubmissionVerdict(submissionId int, verdict string) (err error) {
+	ctx := context.Background()
+
+	_, err = r.mainDB.Exec(
+		ctx,
+		`UPDATE Submission SET verdict = $1
+		WHERE id = $2;`,
+		verdict,
+		submissionId,
+	)
+	if err != nil {
+		return
+	}
+
+	return
+}

@@ -82,6 +82,10 @@ func (s *submitProblemStrategy) Run(services interfaces.ServiceContainer) (err e
 			if err != nil {
 				return
 			}
+			err = submissionService.UpdateSubmissionVerdict(submission.Id, submission.Verdict)
+			if err != nil {
+				return
+			}
 			return
 		}
 	}
